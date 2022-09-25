@@ -1,4 +1,4 @@
-(defproject clj-kinesis-client "1.0.1-SNAPSHOT"
+(defproject ai.motiva/clj-kinesis-client "1.0.1-SNAPSHOT"
   :description "Clojure AWS Kinesis client"
   :url "https://github.com/Motiva-AI/clj-kinesis-client"
   :license {:name "Eclipse Public License"
