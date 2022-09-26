@@ -4,7 +4,8 @@
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
 
-  :dependencies [[com.amazonaws/amazon-kinesis-client "1.14.8" :exclusions [com.amazonaws/aws-java-sdk-dynamodb]]]
+  :dependencies [[com.amazonaws/amazon-kinesis-client "1.14.8" :exclusions [com.amazonaws/aws-java-sdk-dynamodb]]
+                 [org.clojure/data.json "2.4.0"]]
 
   :profiles {:dev {:dependencies [[org.clojure/clojure "1.11.1"]
                                   [clj-containment-matchers "1.0.1"]]}})
