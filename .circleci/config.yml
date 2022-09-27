@@ -29,15 +29,15 @@ jobs:
 
       - run:
           name: Run tests
-          command: echo "TODO with localstack orb?"
+          command: docker-compose run --name lib lib sh -c "dev/resources/wait_for.sh kinesis:4567 -t 20 -- lein test :all"
           no_output_timeout: 90s
 
       - run:
           name: Copy test results
-          command: echo "TODO"
+          command: docker cp lib:/lib/target ./
 
-    # - store_test_results:
-    #     path: target/test_output
+      - store_test_results:
+          path: target/test_output
 
       - save_cache:
           key: v1-clj-kinesis-client-{{ checksum "project.clj" }}
