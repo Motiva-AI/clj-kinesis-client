@@ -8,7 +8,7 @@
       UUID)))
 
 
-(defonce client (create-client :endpoint "http://localhost:4567"))
+(defonce client (create-client :endpoint "http://kinesis:4567"))
 (def test-stream-name (str (UUID/randomUUID)))
 
 

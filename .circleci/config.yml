@@ -1,0 +1,84 @@
+version: 2
+
+jobs:
+  build:
+    docker:
+      - image: circleci/clojure:openjdk-11-lein
+        auth:
+          username: motivaaai
+          password: $DOCKER_HUB_PASSWORD
+
+    steps:
+      - checkout
+
+      - restore_cache:
+          keys:
+          - v1-clj-kinesis-client-{{ checksum "project.clj" }}
+          # fallback to using the latest cache if no exact match is found
+          - v1-clj-kinesis-client-
+
+      - setup_remote_docker
+
+      - run:
+          name: Install dependencies
+          command: lein -U deps
+
+      - run:
+          name: restore mvn repository to remote docker
+          command: cd ~/ && tar cf - ./.m2 | ssh remote-docker "cd ~/ && tar xpvf -"
+
+      - run:
+          name: Run tests
+          command: docker-compose run --name lib lib sh -c "dev/resources/wait_for.sh kinesis:4567 -t 20 -- lein test :all"
+          no_output_timeout: 90s
+
+      - run:
+          name: Copy test results
+          command: docker cp lib:/lib/target ./
+
+      - store_test_results:
+          path: target/test_output
+
+      - save_cache:
+          key: v1-clj-kinesis-client-{{ checksum "project.clj" }}
+          paths:
+            - ~/.m2
+
+  deploy:
+    docker:
+      - image: circleci/clojure:openjdk-11-lein
+
+    environment:
+      LEIN_ROOT: "true"
+      # Customize the JVM maximum heap limit
+      JVM_OPTS: -Xmx3200m
+
+    steps:
+      - checkout
+
+      - restore_cache:
+          keys:
+          - v1-clj-kinesis-client-{{ checksum "project.clj" }}
+          # fallback to using the latest cache if no exact match is found
+          - v1-clj-kinesis-client-
+
+      - run: lein deploy releases
+
+
+workflows:
+  version: 2
+  build_and_test:
+    jobs:
+      - build:
+          context:
+            - docker_hub_creds
+          filters:
+            tags:
+              only: /.*/
+
+      - deploy:
+          requires:
+              - build
+          filters:
+            tags:
+              only: /^v\d\.\d\.\d\w{0,5}$/

@@ -1,7 +1,7 @@
 # clj-kinesis-client
 
-[![Build Status](https://travis-ci.org/adtile/clj-kinesis-client.svg?branch=master)](https://travis-ci.org/adtile/clj-kinesis-client)
-[![Clojars Project](https://img.shields.io/clojars/v/clj-kinesis-client.svg)](https://clojars.org/clj-kinesis-client)
+[![CircleCI](https://circleci.com/gh/Motiva-AI/clj-kinesis-client/tree/master.svg?style=svg)](https://circleci.com/gh/Motiva-AI/clj-kinesis-client/tree/master)
+[![Clojars Project](https://img.shields.io/clojars/v/clj-kinesis-client.svg)](https://clojars.org/ai.motiva/clj-kinesis-client)
 
 A minimalistic Clojure wrapper for AWS Kinesis client.
 
