@@ -61,14 +61,17 @@
     (put-record-response->map response)))
 
 
-(defn put-records
-  [client stream-name events]
+(defn- put-records-request [stream-name events]
   (let [obj->put-entry (fn [entry]
                          (-> (PutRecordsRequestEntry.)
                              (.withData (->json-byte-buffer entry))
-                             (.withPartitionKey (uuid))))
-        request (-> (PutRecordsRequest.)
-                    (.withStreamName stream-name)
-                    (.withRecords (map obj->put-entry events)))
+                             (.withPartitionKey (uuid))))]
+    (-> (PutRecordsRequest.)
+        (.withStreamName stream-name)
+        (.withRecords (map obj->put-entry events)))))
+
+(defn put-records
+  [client stream-name events]
+  (let [request (put-records-request stream-name events)
         response (.putRecords client request)]
     (put-records-response->map response)))
