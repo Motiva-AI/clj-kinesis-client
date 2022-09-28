@@ -1,5 +1,6 @@
 (ns clj-kinesis-client.core
-  (:require [clojure.data.json :as json])
+  (:require
+    [clojure.data.json :as json])
   (:import
     (com.amazonaws
       ClientConfiguration)
@@ -61,14 +62,19 @@
     (put-record-response->map response)))
 
 
-(defn put-records
-  [client stream-name events]
+(defn- put-records-request
+  [stream-name events]
   (let [obj->put-entry (fn [entry]
                          (-> (PutRecordsRequestEntry.)
                              (.withData (->json-byte-buffer entry))
-                             (.withPartitionKey (uuid))))
-        request (-> (PutRecordsRequest.)
-                    (.withStreamName stream-name)
-                    (.withRecords (map obj->put-entry events)))
-        response (.putRecords client request)]
-    (put-records-response->map response)))
+                             (.withPartitionKey (uuid))))]
+    (-> (PutRecordsRequest.)
+        (.withStreamName stream-name)
+        (.withRecords (map obj->put-entry events)))))
+
+
+(defn put-records
+  [client stream-name events]
+  (->> (put-records-request stream-name events)
+       (.putRecords client)
+       (put-records-response->map)))
