@@ -46,13 +46,8 @@
 (defn- put-record-response->map
   [response]
   {:sequence-number (.getSequenceNumber response)
-   :shard-id (.getShardId response)})
-
-
-(defn- put-records-response->map
-  [response]
-  {:failed-record-count (.getFailedRecordCount response)
-   :records (map put-record-response->map (.getRecords response))})
+   :shard-id (.getShardId response)
+   :error-code (.getErrorCode response)})
 
 
 (defn put-record
@@ -61,14 +56,36 @@
     (put-record-response->map response)))
 
 
+(defn- build-put-records-request-entry
+  [coll]
+  (doto (PutRecordsRequestEntry.)
+    (.withData (->json-byte-buffer coll))
+    (.withPartitionKey (uuid))))
+
+
+(defn- build-put-records-request
+  [records]
+  (doto (PutRecordsRequest.)
+    (.withStreamName stream-name)
+    (.withRecords (map build-put-records-request-entry records))))
+
+
 (defn put-records
-  [client stream-name events]
-  (let [obj->put-entry (fn [entry]
-                         (-> (PutRecordsRequestEntry.)
-                             (.withData (->json-byte-buffer entry))
-                             (.withPartitionKey (uuid))))
-        request (-> (PutRecordsRequest.)
-                    (.withStreamName stream-name)
-                    (.withRecords (map obj->put-entry events)))
-        response (.putRecords client request)]
-    (put-records-response->map response)))
+  [client stream-name records]
+  (loop [request           (build-put-records-request records)
+         resends-performed 0]
+
+    (let [response
+          (.putRecords client request)
+
+          failed-record-count
+          (.getFailedRecordCount response)
+
+          records-to-resend
+          (-> (map put-record-response->map (.getRecords response))
+              (filter #(some? :error-code)))]
+
+      (if (pos? records-to-resend)
+        (do
+          (Thread/sleep 500)
+          (recur records-to-resend (+ resends-performed (count records-to-resend))))))))
